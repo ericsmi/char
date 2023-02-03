@@ -1,0 +1,60 @@
+* thresVolt.hsp
+
+* Written 3/11/03  Genevieve_Breed@hmc.edu
+* This spice deck finds the threshold voltage of a gate
+
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd     Vdd     Gnd  'Supply'
+Vds	    Vdd     1        .1
+Vdds	Vdd     2    .1    
+Vgs 	Vdd    3 	0  
+Vggs 	4 	 3    -0.001
+ 
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+m1 1 3  Vdd  Vdd pmos l=2 w=16
+m2 2 4  Vdd  Vdd pmos l=2 w=16
+
+Hxxx 5 Gnd  POLY(2) vds vdds 0 '-1' 1 
+
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vgs 0 'Supply-.001' .001
+
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure out MAX I(Hxxx)
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end

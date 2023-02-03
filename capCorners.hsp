@@ -1,0 +1,106 @@
+* capCorners.hsp
+
+* Written 10/6/96 by Ken Chang  kunyung@leland.stanford.edu
+* This spice deck extracts the capacitance per micron
+* of transistor width for an inverter for SS and FF corners.
+
+* The deck runs an optimization to find the value of a linear
+* capacitor such that the delay of an inverter driving the
+* linear capacitor equals the delay of the inverter driving
+* a load inverter.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP! 	* Must set before calling .lib
+*.temp !TEMP!		* Override temperature by setting it before .lib
+*.param Supply=!VOLT!	* Override voltage by setting it before .lib
+.protect		* Don't print the contents of library
+.lib '!LIB!' !CORNER!	* Load the library for process corner
+.unprotect		* Resume printing SPICE deck
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd	Vdd	Gnd	'Supply'	* Supply is set by .lib call
+
+***********************************************************************
+* Define Subcircuits
+***********************************************************************
+
+.subckt	inv In Out
+m1	Out In Gnd Gnd	nmos	l=2 w=16 ad=80 as=42 pd=80 ps=42
+m2	Out In Vdd Vdd	pmos	l=2 w=32 ad=160 as=74 pd=160 ps=74
+.ends
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+
+x1 	In	Inb	inv			* set appropriate slope
+x2	Inb	Inv	inv	M=4		* help set slop
+xload	Inv	Dum	inv	M=8		* drive real load
+xdummy	Dum	DumDum	inv	M=32		* real load
+xdummy2 DumDum	Dum2	inv	M=128		* load on load (important!)
+x3	Inv	Cap	inv	M=8		* drive linear capacitor
+c1	Cap	Gnd	'CperMicron*32*(16+32)*!LAMBDA!/1u' * linear capacitor
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+
+* Format of pulse input:
+* pulse v_initial v_final t_delay t_rise t_fall t_pulsewidth t_period
+
+Vin     In      Gnd     pulse 0 'Supply' 1ns 20ps 20ps 4ns 10ns
+
+***********************************************************************
+* Measurements
+***********************************************************************
+
+* Measure delay through inverters x2 and x3.
+* Minimize this delay to find proper CperMicron
+
+* Measure the rise and fall delays of the two inverters
+.measure invR
++       TRIG v(Inv)  VAL='Supply/2' FALL=1 
++       TARG v(Dum)  VAL='Supply/2' RISE=1
+.measure  capR
++       TRIG v(Inv)  VAL='Supply/2' FALL=1 
++       TARG v(Cap)  VAL='Supply/2' RISE=1
+.measure invF
++       TRIG v(InV)  VAL='Supply/2' RISE=1
++       TARG v(Dum)  VAL='Supply/2' FALL=1 
+.measure  capF
++       TRIG v(Inv)  VAL='Supply/2' RISE=1
++       TARG v(Cap)  VAL='Supply/2' FALL=1 
+
+* Compute the mismatch between the rise and fall times
+.measure errorR param='invR - capR' goal=0
+.measure errorF param='invF - capF' goal=0
+
+* Optimize to find the capacitance per micron
+* optrange is of the form (guess, min, max)
+* a narrow range and good guess make the simulation faster
+
+.param CperMicron=optrange(2f, 1.5f, 3.0f) 
+.model optmod opt itropt=30 
+.tran 0.1ps 12ns SWEEP OPTIMIZE = optrange RESULTS=errorR,errorF MODEL=optmod
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.measure CperMic param = 'CperMicron'
+
+.end

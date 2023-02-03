@@ -1,0 +1,92 @@
+
+*** Process Characterization Results ***
+
+Process File: /proj/models/tsmc180/opConditions.lib
+VDD: 1.8
+LAMBDA: 0.09u 
+Run completed Thu May 13  3:44:14 2010 in 1470 seconds
+
+    NMOS Gate Overlap Cap fF/um: 0.366
+         Area Cap fF/um^2: 0.762
+         Outer Perimeter Cap fF/um: 0.178
+         Inner Perimeter Cap fF/um: 0.210
+    NMOS Total Diff Cap fF/um (delay): 1.047
+         Shared Contact Diff Cap fF/um (delay): 1.519
+         Merged Contact Diff Cap fF/um (delay): 1.335
+         Total Diff Cap (calc.) fF/um: 1.097
+    Single NMOS Effective Resistance (fanouts 3-4) =  2.69 KOhms*um 
+    Series NMOS Effective Resistance (fanouts 3-4) =  1.98 KOhms*um 
+    NMOS Threshold Voltage (constant current method)
+      0 C:  0.45 V
+      70 C:  0.41 V
+      125 C:  0.37 V
+    NMOS Threshold Voltage (linear extrapolation method)
+      Vgs=Vto     NMOS = 0.534 V
+      Ids @ Vgs=Vto NMOS = 5.123 uA/um
+      Vgs=Vt      NMOS = 0.484 V
+      Ids @ Vgs=Vt  NMOS = 2.311 uA/um
+    Saturation Current
+    NMOS:
+      0 C: 623.63 uA/um
+      70 C: 566.31 uA/um
+      125 C: 520.97 uA/um
+    Off Current
+    NMOS:
+      0 C:  4.70 pA/um
+      70 C: 93.92 pA/um
+      125 C: 688.64 pA/um
+    Gate leakage:  0.00 pA/um
+    PMOS Gate Overlap Cap fF/um: 0.328
+         Area Cap fF/um^2: 0.855
+         Outer Perimeter Cap fF/um: 0.201
+         Inner Perimeter Cap fF/um: 0.367
+    PMOS Diff Cap fF/um (delay): 1.336
+         Shared Contact Diff Cap fF/um (delay): 1.901
+         Merged Contact Diff Cap fF/um (delay): 1.645
+         Total Diff Cap (calc.) fF/um: 1.280
+    Single PMOS Effective Resistance (fanouts 3-4) =  6.58 KOhms*um 
+    Series PMOS Effective Resistance (fanouts 3-4) =  5.41 KOhms*um 
+    PMOS Threshold Voltage (constant current method)
+      0 C:  0.50 V
+      70 C:  0.43 V
+      125 C:  0.38 V
+    PMOS Threshold Voltage (linear extrapolation method)
+      Vgs=Vto     PMOS = 0.506 V
+      Ids @ Vgs=Vto PMOS = 1.136 uA/um
+      Vgs=Vt      PMOS = 0.456 V
+      Ids @ Vgs=Vt  PMOS = 0.499 uA/um
+    Saturation Current
+    PMOS:
+      0 C: 238.24 uA/um
+      70 C: 227.97 uA/um
+      125 C: 221.65 uA/um
+    Off Current
+    PMOS:
+      0 C:  2.76 pA/um
+      70 C: 25.16 pA/um
+      125 C: 938.33 pA/um
+    Gate leakage:  0.00 pA/um
+
+    Capacitance fF/um (delay):  1.67
+    Capacitance fF/um (power) - average:  2.06
+    Capacitance fF/um (power) - falling:  2.06
+    Capacitance fF/um (power) - rising:  2.06
+    Gate Cap %change / degree C (delay):  0.00
+    Gate Cap %change / volt (delay):  7.45
+    Inverter Delay (FO1): Rise  30.8 ps Fall  29.7 ps Average  30.3 ps
+    Inverter Delay (FO2): Rise  47.1 ps Fall  43.2 ps Average  45.1 ps
+    Inverter Delay (FO3): Rise  63.5 ps Fall  56.6 ps Average  60.1 ps
+    Inverter Delay (FO4): Rise  80.0 ps Fall  70.1 ps Average  75.1 ps
+    Inverter Delay (FO6): Rise 113.1 ps Fall  97.0 ps Average 105.0 ps
+    Inverter Delay (FO8): Rise 146.1 ps Fall 123.9 ps Average 135.0 ps
+    Inverter Delay =  15.3 +  15.0 * fanout ps
+    Inverter Delay %change / degree C:  0.07
+    Inverter Delay %change / volt: -43.69
+    FO4 NAND Delay:  Rise 117.1 ps Fall  65.1 ps Average  91.1 ps
+    FO4 NOR Delay:  Rise 120.3 ps Fall 118.1 ps Average 119.2 ps
+    NAND Delay (inner input) =  19.8 + 16.23 * fanout ps
+    NAND Delay (outer input) = 27.08 + 15.42 * fanout ps
+    NAND Delay (both inputs) = 19.96 + 10.51 * fanout ps
+    NOR Delay (inner input) = 25.12 + 19.93 * fanout ps
+    NOR Delay (outer input) = 38.83 + 19.78 * fanout ps
+    NOR Delay (both inputs) = 25.44 + 14.76 * fanout ps

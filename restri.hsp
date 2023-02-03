@@ -1,0 +1,115 @@
+* restri.hsp
+
+* Written 10/6/96 by Ken Chang  kunyung@leland.stanford.edu
+* This spice deck simulates the rise and fall time of a tristate inverter for 
+* part (8) of problem 1
+
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd	Vdd	Gnd	'Supply'	* Supply is set by .lib call
+
+***********************************************************************
+* Define Subcircuits
+***********************************************************************
+
+.subckt	inv In Out
+m1	Out In Gnd Gnd	nmos	l=2 w=16 AD=0 PD=0 AS=0 PS=0 
+m2	Out In Vdd Vdd	pmos	l=2 w=32 AD=0 PD=0 AS=0 PS=0
+.ends
+
+* tristate inverter with both inputs connected together
+
+.subckt inv_d   In      Out
+m1      Out     In      n       Gnd     nmos    
++ 	l=2  w=16 AD=0 PD=0 AS=0 PS=0
+m2      n       Vdd      Gnd     Gnd     nmos    
++	l=2  w=16 AD=0 PD=0 AS=0 PS=0
+m3      p       In      Vdd     Vdd     pmos    
++	l=2  w=32 AD=0 PD=0 AS=0 PS=0
+m4      Out     Gnd      p       Vdd     pmos    
++	l=2  w=32 AD=0 PD=0 AS=0 PS=0
+.ends
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+
+* First inverter has a step input
+
+x1      In      Out     inv_d
+x2	Out	dummy1	inv	M = 4
+X3	dummy1	dummy2	inv	M = 16
+
+* Out1 is driven by a fanout of 4 inverter
+x4      In      Out1    inv
+x5      Out1    Cap  	inv_d   M = 4
+X6	Cap	dummy4	inv	M = 16
+X7	dummy4	dummy5	inv	M = 64
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+
+* Format of pulse input:
+* pulse v_initial v_final t_delay t_rise t_fall t_pulsewidth t_period
+
+Vin     In      Gnd     pulse 0 'Supply' 1ns 0.1ns 0.1ns 4ns 10ns
+
+***********************************************************************
+* Measurements
+***********************************************************************
+
+
+* Measure the rise and fall delays of the two inverters
+.measure StepR
++       TRIG v(In) VAL='Supply/2' FALL=1 
++       TARG v(Out) VAL = 'Supply/2' RISE=1
+.measure  SlowR
++       TRIG v(Out1) VAL='Supply/2' FALL=1 
++       TARG v(Cap) VAL = 'Supply/2' RISE=1
+.measure StepF
++       TRIG v(In) VAL='Supply/2' RISE=1
++       TARG v(Out) VAL = 'Supply/2' FALL=1 
+.measure  SlowF
++       TRIG v(Out1) VAL='Supply/2' RISE=1
++       TARG v(Cap) VAL = 'Supply/2' FALL=1 
+
+*.measure StepResR param ='16*StepR/(!CPERMIC!*(32+16)*(!LAMBDA!/1u)*4*2)'
+*.measure StepResF param ='8*StepF/(!CPERMIC!*(32+16)*(!LAMBDA!/1u)*4*2)'
+*.measure SlowResR param ='16*SlowR/(!CPERMIC!*(32+16)*(!LAMBDA!/1u)*4*2)'
+*.measure SlowResF param ='8*SlowF/(!CPERMIC!*(32+16)*(!LAMBDA!/1u)*4*2)'
+.measure StepResR param ='32*StepR/(!CPERMIC!*(32+16)*4*2)'
+.measure StepResF param ='16*StepF/(!CPERMIC!*(32+16)*4*2)'
+.measure SlowResR param ='32*SlowR/(!CPERMIC!*(32+16)*4*2)'
+.measure SlowResF param ='16*SlowF/(!CPERMIC!*(32+16)*4*2)'
+
+.tran 1ps 16ns 
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+
+.end

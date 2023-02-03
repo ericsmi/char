@@ -1,0 +1,61 @@
+* MOSFET Vt Measurement
+* ddiaz@hmc.edu & gbreed@hmc.edu 10/06/02
+*
+* This SPICE deck measures the threshold voltage for MOSFETS.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+.param sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd Gnd
+Vdd	Vdd	Gnd	'Supply'    * Supply is set by .lib call
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+Vdsn vdn gnd 0.1
+Vgsn vgn gnd 0
+Vdsp vdp gnd 'Supply-0.1'
+Vgsp vgp gnd 0
+Mn vdn vgn gnd gnd NMOS W=16 L=2
+Mp vdp vgp vdd vdd PMOS W=16 L=2
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vgsn 0 'supply' 0.05
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure vt_n find v(vgn) when i(vdsn)=-0.8u
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vgsp 0 'supply' 0.05
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure vt_p find v(vgp) when i(vdsp)=0.48u
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end

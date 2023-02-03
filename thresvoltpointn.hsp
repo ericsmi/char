@@ -1,0 +1,55 @@
+* thresVoltPointn.hsp
+
+* Written 4/1/03  Genevieve_Breed@hmc.edu
+* This spice deck finds the current of a gate at a specific voltage
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+*.op
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd     Vdd     Gnd  'Supply'
+Vds	    1       Gnd     .1	        
+Vgs 	2       Gnd     !VGS!	
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+ m1 1 2  Gnd  Gnd nmos l=2 w=16 *AD=80 PD=42 AS=80 PS=42
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vgs 0 'Supply' .001
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure current FIND I(Vds) At =!VGS!
+
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end
+

@@ -1,0 +1,52 @@
+* MOSFET Idsat Measurement
+* ddiaz@hmc.edu & gbreed@hmc.edu 10/06/02
+*
+* This SPICE deck measures the saturation current for MOSFETS.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd Gnd
+Vdd	Vdd	Gnd	'Supply'    * Supply is set by .lib call
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+Vdsn vdn gnd 'supply'
+Vgsn vgn gnd 'supply'
+Vdsp vdp gnd 0
+Vgsp vgp gnd 0
+Mn vdn vgn gnd gnd NMOS W=16 L=2
+Mp vdp vgp vdd vdd PMOS W=16 L=2
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vgsn 0 'supply' 'supply'
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure idsat_n find i(vdsn) when v(vgn)='supply'
+.measure idsat_p find i(vdsp) when v(vdn)='supply'
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end

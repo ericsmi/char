@@ -1,0 +1,93 @@
+* seriesRes.hsp
+
+* Written 3/14/2003 by Genevieve Breed  gbreed@hmc.edu
+* This spice deck measures the delay of an inverter
+* for many possible combinations:
+*
+* Process Corner: 	!CORNER! (TT, SS, FF)
+* Temperature: 		!TEMP!
+* Voltage:		!VOLT!
+* Fanout:		!FANOUT!
+
+* The deck uses a first inverter to shape the input slope, a second
+* inverter to measure, a third inverter as a load, and a fourth
+* inverter as load on the load.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd	Vdd	Gnd	'Supply'	* Supply is set by .lib call
+
+***********************************************************************
+* Define Subcircuits
+***********************************************************************
+
+.subckt	tri In Out
+m1	a In Gnd Gnd	nmos	l=2 w=16 AD=0 PD=0 AS=0 PS=0
+m2  Out Vdd a Gnd   nmos    l=2 w=16 AD=0 PD=0 AS=0 PS=0
+m3	b In Vdd Vdd	pmos	l=2 w=32 AD=0 PD=0 AS=0 PS=0
+m4  Out Gnd b Vdd   pmos    l=2 w=32 AD=0 PD=0 AS=0 PS=0
+.ends
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+x0 	In	In1 tri
+x1 	In1	Inb	tri	M=!FANOUT!		* set appropriate slope
+x2	Inb	Inv	tri	M='!FANOUT! * !FANOUT!'	* inverter to measure
+x3	Inv	Out3	tri	M='!FANOUT! * !FANOUT! * !FANOUT!' * load
+x4	Out3	Out4	tri	M='!FANOUT! * !FANOUT! * !FANOUT!  * !FANOUT!' * load2
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+
+* Format of pulse input:
+* pulse v_initial v_final t_delay t_rise t_fall t_pulsewidth t_period
+
+Vin     In      Gnd     pulse 0 'Supply' 1ns 20ps 20ps 4ns 10ns
+
+***********************************************************************
+* Measurements
+***********************************************************************
+
+* Measure delay through tri x2
+
+.measure triR
++       TRIG v(Inb)  VAL='Supply/2' FALL=1 
++       TARG v(Inv)  VAL='Supply/2' RISE=1
+.measure triF
++       TRIG v(Inb)  VAL='Supply/2' RISE=1
++       TARG v(Inv)  VAL='Supply/2' FALL=1 
+
+* Compute the average delay
+.measure triA param='(triR + triF)/2'
+
+.tran 0.1ps 12ns
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end
+

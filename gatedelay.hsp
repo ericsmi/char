@@ -1,0 +1,117 @@
+* gatedelay.hsp
+
+* Written 10/3/96 by David Harris  harrisd@leland.stanford.edu
+* This spice deck measures the delay of a 2-input gate
+* for many possible combinations:
+*
+* Process Corner: 	!CORNER! (TT, SS, FF)
+* Gate:			!GATE! (nand2, nor2)
+* Outer input:		!OUTER! (Inb, Gnd, Vdd)
+* Inner input:		!INNER! (Inb, Gnd, Vdd)
+
+* The deck uses a first inverter to shape the input slope, a gate
+* to measure, a third inverter as a load, and a fourth
+* inverter as load on the load.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd	Vdd	Gnd	'Supply'	* Supply is set by .lib call
+
+***********************************************************************
+* Define Subcircuits
+***********************************************************************
+
+.subckt	inv In Out N=16 P=32 
+* Assumes 5 lambda of diffusion on the source/drain
+m1	Out In Gnd Gnd	nmos	l=2 w=N 	as='5*N' ad='5*N'
++						ps='2*N+10' pd='2*N+10'
+m2	Out In Vdd Vdd	pmos	l=2 w=P		as='5*P' ad='5*P'
++					 	ps='2*P+10' pd='2*P+10'
+.ends
+
+.subckt	nand2 InOuter InInner Out N='48/2' P='48/2'
+m1	Mid InOuter Gnd Gnd	nmos l=2 w=N 	as='5*N' ad='1.5*N'
++						ps='2*N+10' pd='N+3'
+m2	Out InInner Mid Gnd	nmos l=2 w=N 	as='1.5*N' ad='5*N'
++						ps='N+3' pd='2*N+10'
+m3	Out InOuter Vdd Vdd	pmos l=2 w=P	as='5*P' ad='3*P'
++					 	ps='2*P+10' pd='P+6'
+m4	Out InInner Vdd Vdd	pmos l=2 w=P	as='5*P' ad='3*P'
++					 	ps='2*P+10' pd='P+6'
+.ends
+
+.subckt nor2 InOuter InInner Out N='48/5' P='48*4/5'
+m1      Out InOuter Gnd Gnd     nmos l=2 w=N   as='5*N' ad='3*N'
++                                               ps='2*N+10' pd='N+6'
+m2      Out InInner Gnd Gnd     nmos l=2 w=N   as='5*N' ad='3*N'
++                                               ps='2*N+10' pd='N+6'
+m3      Mid InOuter Vdd Vdd     pmos l=2 w=P   as='5*P' ad='1.5*P'
++                                               ps='2*P+10' pd='P+3'
+m4      Out InInner Mid Vdd     pmos l=2 w=P   as='1.5*P' ad='5*P'
++                                               ps='P+3' pd='2*P+10'
+.ends
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+
+x0	In	In1	inv	
+x1 	In1	Inb	inv	M=4		* set appropriate slope
+x2	!OUTER! !INNER!	Inv !GATE!	M=16	* gate to measure
+x3	Inv	Out3	inv	M=64		* load
+x4	Out3	Out4	inv	M=128 		* load on load
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+
+* Format of pulse input:
+* pulse v_initial v_final t_delay t_rise t_fall t_pulsewidth t_period
+
+Vin     In      Gnd     pulse 0 'Supply' 1ns 20ps 20ps 4ns 10ns
+
+***********************************************************************
+* Measurements
+***********************************************************************
+
+* Measure delay through gate x2
+
+.measure delayR
++       TRIG v(Inb)  VAL='Supply/2' FALL=1 
++       TARG v(Inv)  VAL='Supply/2' RISE=1
+.measure delayF
++       TRIG v(Inb)  VAL='Supply/2' RISE=1
++       TARG v(Inv)  VAL='Supply/2' FALL=1 
+
+* Compute the average delay
+.measure delayA param='(delayR + delayF)/2'
+
+.tran 0.1ps 12ns
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end
+

@@ -1,0 +1,54 @@
+* MOSFET gate leakage measurement
+* Nathaniel Pinckney 8-17-07
+*
+* This SPICE deck measures the gate leakage at Vgs = 'SUPPLY'
+
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd Gnd
+Vdd	Vdd	Gnd	'Supply'    * Supply is set by .lib call
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+Vdsn vdn gnd 0
+Vgsn vgn gnd 'supply'
+
+Vdsp vdp gnd 'supply'
+Vgsp vgp gnd 0
+Mn vdn vgn gnd gnd NMOS W=16 L=2
+Mp vdp vgp vdd vdd PMOS W=16 L=2
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vdsn 0 1  0.1
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure gateleak_n find i(vgsn) when v(vdn)=0
+.measure gateleak_p find i(vgsp) when v(vdn)=0
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end

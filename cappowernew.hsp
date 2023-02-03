@@ -1,0 +1,88 @@
+* pwrdelay.hsp
+
+* Written 10/4/96 by Ken Chang kunyung@montana.stanford.edu
+* This spice deck extracts the capacitance per micron
+* of transistor width for an inverter.
+
+* The deck runs an optimization to find the value of a linear
+* capacitor such that the power of an inverter driving the
+* linear capacitor equals the power of the inverter driving
+* a load inverter.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+* The characterization script replaces !SUP! with the
+* user-specified supply and !LIB! with the user-specified
+* library.
+
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd 	Gnd
+Vdd	Vdd	Gnd	'Supply'	* Supply is set by .lib call
+
+***********************************************************************
+* Define Subcircuits
+***********************************************************************
+
+.subckt	inv In Out
+m1	Out In Gnd Gnd	nmos	l=2 w=16 ad=0 as=0 pd=0 ps=0
+m2	Out In Vdd Vdd	pmos	l=2 w=32 ad=0 as=0 pd=0 ps=0 
+.ends
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+
+x1 In Out inv
+
+
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+
+* Format of pulse input:
+* pulse v_initial v_final t_delay t_rise t_fall t_pulsewidth t_period
+
+Vin     In      Gnd     pulse 0 'Supply' 1ns 20ps 20ps 4ns 10ns
+
+***********************************************************************
+* Measurements
+***********************************************************************
+
+* Measure power through inverters x2 and x3.
+* Minimize this delay to find proper CperMicron
+
+* Measure the rise and fall delays of the two inverters
+.measure TRAN invF INTEG I(Vin) FROM = 5ns TO = 9ns
+.measure TRAN invR INTEG I(Vin) FROM = 10ns TO 14ns
+
+
+* Optimize to find the capacitance per micron
+* optrange is of the form (guess, min, max)
+* a narrow range and good guess make the simulation faster
+
+.measure invA param='(invF - invR)/2'
+
+.tran 0.1ps 20ns 
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+
+.end

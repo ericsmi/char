@@ -1,0 +1,52 @@
+* MOSFET Ioff Measurement
+* ddiaz@hmc.edu & gbreed@hmc.edu 10/06/02
+*
+* This SPICE deck measures the off current for MOSFETS.
+
+***********************************************************************
+* Set supply and library
+***********************************************************************
+.param Sup=!SUP!        * Must set before calling .lib
+.temp !TEMP!            * Override temperature by setting it before .lib
+.protect                * Don't print the contents of library
+.lib '!LIB!' !CORNER!   * Load the library for process corner
+.unprotect              * Resume printing SPICE deck
+.param Supply=!VOLT!    * Override voltage by setting it after .lib
+.opt scale=!LAMBDA!     * Set lambda
+.option accurate
+
+* Save results of simulation for viewing
+.options post
+
+***********************************************************************
+* Define power supply
+***********************************************************************
+
+.global Vdd Gnd
+Vdd	Vdd	Gnd	'Supply'    * Supply is set by .lib call
+
+***********************************************************************
+* Top level simulation netlist
+***********************************************************************
+Vdsn vdn gnd 'supply'
+Vgsn vgn gnd 0
+Vdsp vdp gnd 0
+Vgsp vgp gnd 'supply'
+Mn vdn vgn gnd gnd NMOS W=16 L=2
+Mp vdp vgp vdd vdd PMOS W=16 L=2
+
+***********************************************************************
+* Stimulus
+***********************************************************************
+.dc Vdsn 0 'supply' 'supply'
+
+***********************************************************************
+* Measurements
+***********************************************************************
+.measure ioff_n find i(vdsn) when v(vdn)='supply'
+.measure ioff_p find i(vdsp) when v(vdn)='supply'
+
+***********************************************************************
+* End of Deck
+***********************************************************************
+.end
